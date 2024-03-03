@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 import os
 from mySQL_Function import greet
 from PIL import Image
@@ -20,9 +21,10 @@ image3 = Image.open('Photos/food4.png')
 
 user = os.environ['USERNAME']
 
+
 st.title("Tacos Los Cholos")
 
-HomeTab, OrderTab, CateringTab, MenuTab = st.tabs(["Home","Order","Menu","Catering",])
+HomeTab, OrderTab, MenuTab, CateringTab,  = st.tabs(["Home","Order","Menu","Catering",])
 with HomeTab:
     col1, col2, col3 = st.columns(3)
     col1.image(image1)
@@ -30,13 +32,51 @@ with HomeTab:
     col3.image(image3)
 
 with OrderTab:
-    st.text_input("Label 1")
+    OTcol1, OTcol2 = st.columns(2)
+
+    OTcol1.text_input("First Name")
+    OTcol2.text_input("Last Name")
+    OTcol1.text_input("Email Address")
+    OTcol2.number_input("Phone Number",step=1,format="%i")
+    #%d %e %f %g %i %u
+    c = st.container()
+
+    df = pd.DataFrame(
+    [
+       {"Item": "Food 1","Price":10, "Quantity": 0 },
+       {"Item": "Food 2", "Price":10,"Quantity": 0 },
+       {"Item": "Food 3","Price":10, "Quantity": 0},
+   ]
+    )
+
+    edited_df = c.data_editor(df,column_config={
+        "Item": st.column_config.Column(width=300),
+        "Price":st.column_config.NumberColumn(format="$%d") },use_container_width=True,hide_index=True)
+    
+        # Sum column 'A' where column 'B' is True
+    columnsum = (edited_df['Price'] * edited_df['Quantity']).sum()
+    c.markdown(f"<div style='text-align: right;'>Total: $<b>{columnsum}</b></div>", unsafe_allow_html=True)
+
+
+    c.button("Submit",use_container_width=True)
 
 with CateringTab:
     st.text_input("Label 2")
 
 with MenuTab:
-    st.text_input("Label 3")
+    Mcol1, Mcol2 = st.columns(2)
+    Mcol1.header("Food 1 and Descr")
+   
+    Mcol2.text("Add Pic Here")
+
+    st.divider()
+
+    Mcol1, Mcol2 = st.columns(2)
+    Mcol1.header("Food 1 and Descr")
+   
+    Mcol2.text("Add Pic Here")
+
+    st.divider()
 
 st.divider()
 
@@ -51,3 +91,6 @@ st.markdown("""
 
 
 st.markdown("<small style='display: block; text-align: center; color: grey;'>©2023 Tacos Los Cholos. All rights reserved.</small>", unsafe_allow_html=True)
+
+
+
