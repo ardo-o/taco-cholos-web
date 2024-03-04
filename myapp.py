@@ -3,11 +3,43 @@ import pandas as pd
 import os
 from mySQL_Function import greet
 from PIL import Image
+import mysql.connector
 
 st.set_page_config(
-    page_title="Cholos Tacos"
+    page_title="Cholos Tacos",
+    initial_sidebar_state="collapsed",
+    layout="wide"
     
 )
+st.sidebar.markdown("Select page view.")
+
+DbPass = os.environ['DBPass']
+
+# Connecting from the server
+db = mysql.connector.connect(user='root',
+                   password=DbPass,
+                   host='127.0.0.1',
+                   database='CholosTacos')
+ 
+# you must create a Cursor object. It will let
+#  you execute all the queries you need
+cur = db.cursor()
+
+# Use all the SQL you like
+cur.execute("SELECT * FROM orders")
+
+# Fetch all the rows from the SQL result
+rows = cur.fetchall()
+
+# Get column names
+columns = [desc[0] for desc in cur.description]
+
+# Create a DataFrame
+df = pd.DataFrame(rows, columns=columns)
+
+
+
+
 
 # Call the function
 result = greet("ff")
@@ -17,9 +49,6 @@ print(result)
 image1 = Image.open('Photos/pizza.png')
 image2 = Image.open('Photos/food3.png')
 image3 = Image.open('Photos/food4.png')
-
-
-user = os.environ['USERNAME']
 
 
 st.title("Tacos Los Cholos")
@@ -41,13 +70,13 @@ with OrderTab:
     #%d %e %f %g %i %u
     c = st.container()
 
-    df = pd.DataFrame(
-    [
-       {"Item": "Food 1","Price":10, "Quantity": 0 },
-       {"Item": "Food 2", "Price":10,"Quantity": 0 },
-       {"Item": "Food 3","Price":10, "Quantity": 0},
-   ]
-    )
+ #   df = pd.DataFrame(
+ #   [
+ #      {"Item": "Food 1","Price":10, "Quantity": 0 },
+ #      {"Item": "Food 2", "Price":10,"Quantity": 0 },
+ #      {"Item": "Food 3","Price":10, "Quantity": 0},
+ #  ]
+ #   )
 
     edited_df = c.data_editor(df,column_config={
         "Item": st.column_config.Column(width=300),
@@ -64,19 +93,34 @@ with CateringTab:
     st.text_input("Label 2")
 
 with MenuTab:
-    Mcol1, Mcol2 = st.columns(2)
-    Mcol1.header("Food 1 and Descr")
-   
-    Mcol2.text("Add Pic Here")
+    cur.execute("SELECT ItemName, Description FROM Menu")
 
-    st.divider()
+    # Fetch all the rows from the SQL result
+    rows = cur.fetchall()
 
-    Mcol1, Mcol2 = st.columns(2)
-    Mcol1.header("Food 1 and Descr")
-   
-    Mcol2.text("Add Pic Here")
+    # Get column names
+    columns = [desc[0] for desc in cur.description]
 
-    st.divider()
+    # Create a DataFrame
+    df = pd.DataFrame(rows, columns=columns)
+
+    # Initialize an empty string to store the HTML code
+    html_code = ''
+
+    # Iterate through each row of the DataFrame
+    for index, row in df.iterrows():
+        # Extract values from the current row
+        item_name = row['ItemName']
+        description = row['Description']
+        
+        # Construct HTML code for the current row
+        row_html = f'<h2>{item_name}</h2>\n<p>{description}</p>\n'
+        
+        # Append the HTML code for the current row to the overall HTML code
+        html_code += row_html
+
+        # Display the HTML content using Streamlit
+    st.markdown(html_code, unsafe_allow_html=True)
 
 st.divider()
 
@@ -92,5 +136,5 @@ st.markdown("""
 
 st.markdown("<small style='display: block; text-align: center; color: grey;'>©2023 Tacos Los Cholos. All rights reserved.</small>", unsafe_allow_html=True)
 
-
+db.close()
 
