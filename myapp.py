@@ -8,7 +8,9 @@ import re
 from decimal import Decimal
 
 st.set_page_config(
-    page_title="Cholos Tacos 2",
+
+    page_title="Cholos Tacos new",
+
     initial_sidebar_state="collapsed",
     layout="wide"
     
