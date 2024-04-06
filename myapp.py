@@ -6,6 +6,7 @@ from PIL import Image
 import mysql.connector
 import re
 from decimal import Decimal
+from datetime import date
 
 st.set_page_config(
 
@@ -60,7 +61,7 @@ def validate_phone_number(phone_number):
 
 st.title("Tacos Los Cholos")
 
-HomeTab, OrderTab, MenuTab, CateringTab,  = st.tabs(["Home","Order","Menu","Catering",])
+HomeTab, OrderTab, MenuTab,   = st.tabs(["Home","Order","Menu"])
 with HomeTab:
     col1, col2, col3 = st.columns(3)
     col1.image("https://i.ibb.co/FXSBgTx/pizza.png")
@@ -93,7 +94,7 @@ with OrderTab:
 
     edited_df = c.data_editor(df,column_config={
         "ItemName": st.column_config.Column(width=300),
-        "Price":st.column_config.NumberColumn(format="$%d") },use_container_width=True,hide_index=True,disabled=["ItemName","ItemID","Description","Price"])
+        "Price":st.column_config.NumberColumn(format="$%.2f") },use_container_width=True,hide_index=True,disabled=["ItemName","ItemID","Description","Price"])
     
         # Sum column 'A' where column 'B' is True
     
@@ -122,14 +123,50 @@ with OrderTab:
         elif columnsum ==0:
             st.warning("Please enter a QTY.")
         else:
-            sql_insert = f"INSERT INTO orders (Price) VALUES ({columnsum+tax})"
-            cur.execute(sql_insert)
-            st.success("Data inserted successfully!")
-            db.commit()
-        
+            # Define values to insert or check
+            values = (first_name, last_name, str(phone_number), email)
 
-with CateringTab:
-    st.text_input("Label 2")
+            # Execute a SELECT query to check if the record exists
+            cur.execute("SELECT CustomerID FROM Customer WHERE FirstName = %s AND LastName = %s AND PhoneNumber = %s AND EmailAddress = %s", values)
+
+            # Fetch the first row (if any)
+            rowd = cur.fetchone()
+
+            if rowd:
+                # If the record exists, retrieve the primary key
+                customer_id = rowd[0]
+                print("Customer already exists. CustomerID:", customer_id)
+            else:
+                # If the record does not exist, insert a new record
+                cur.execute("INSERT INTO Customer (FirstName, LastName, PhoneNumber, EmailAddress) VALUES (%s, %s, %s, %s)", values)
+                # Retrieve the primary key of the newly inserted record
+                customer_id = cur.lastrowid
+
+            while cur.nextset():
+                pass
+
+            today_date = date.today().isoformat()
+            cur.execute("INSERT INTO Order_Line (EmployeeID, CustomerID, OrderDate, AmountPaid, PaymentMethod) VALUES (%s, %s, %s, %s,%s)", (1, customer_id, today_date, columnsum+tax,"Debit"))
+            orderID = cur.lastrowid
+
+            for index, row in edited_df.iterrows():
+                # Extract values from the row
+                Price = row['Price']
+                item_id = row['ItemID']
+                quantity = row['Quantity']
+                subtot = Price*quantity
+
+                if quantity > 0:
+                
+                    # Execute the SQL INSERT statement for each row
+                    cur.execute("INSERT INTO Order_Item (OrderID, ItemID, Quantity, Subtotal) VALUES (%s, %s, %s, %s)", (orderID, item_id, quantity,subtot ))
+
+            db.commit()
+            #sql_insert = f"INSERT INTO orders (Price) VALUES ({columnsum+tax})"
+            #cur.execute(sql_insert)
+            st.success("Data inserted successfully!")
+            #db.commit()
+        
 
 with MenuTab:
     cur.execute("SELECT ItemName, Description FROM Menu")
