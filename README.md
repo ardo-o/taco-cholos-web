@@ -37,7 +37,7 @@ To run the application, ensure you have the following:
 
 ## Functionality
 
-The application provides three main tabs:
+The application provides four main tabs:
 
 1. **Home Tab**: Displays an introductory section with images representing the restaurant.
 2. **Order Tab**: Allows users to place orders by selecting items from the menu and providing necessary contact details. It calculates the subtotal, tax, and total automatically.
