@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
-from mySQL_Function import greet
+from Query import *
 from PIL import Image
 import mysql.connector
 import numpy as np
@@ -28,7 +28,7 @@ db = mysql.connector.connect(user='root',
 cur = db.cursor()
 
 # Use all the SQL you like
-cur.execute("SELECT * FROM Menu")
+cur.execute(getMenu())
 
 # Fetch all the rows from the SQL result
 rows = cur.fetchall()
@@ -39,7 +39,7 @@ columns = [desc[0] for desc in cur.description]
 # Create a DataFrame
 df = pd.DataFrame(rows, columns=columns)
 
-cur.execute("SELECT * FROM employee")
+cur.execute(getEmployee())
 
 # Fetch all the rows from the SQL result
 rows = cur.fetchall()
@@ -50,7 +50,7 @@ columns = [desc[0] for desc in cur.description]
 # Create a DataFrame
 df2 = pd.DataFrame(rows, columns=columns)
 
-cur.execute("SELECT * FROM customer")
+cur.execute(getCustomer())
 
 # Fetch all the rows from the SQL result
 rows = cur.fetchall()
@@ -61,7 +61,7 @@ columns = [desc[0] for desc in cur.description]
 # Create a DataFrame
 df3 = pd.DataFrame(rows, columns=columns)
 
-cur.execute("SELECT * FROM supplier")
+cur.execute(getSupplier())
 
 # Fetch all the rows from the SQL result
 rows = cur.fetchall()
@@ -72,7 +72,7 @@ columns = [desc[0] for desc in cur.description]
 # Create a DataFrame
 df4 = pd.DataFrame(rows, columns=columns)
 
-cur.execute("SELECT * FROM Ingredients")
+cur.execute(getIngredients())
 
 # Fetch all the rows from the SQL result
 rows = cur.fetchall()
@@ -83,22 +83,7 @@ columns = [desc[0] for desc in cur.description]
 # Create a DataFrame
 df5 = pd.DataFrame(rows, columns=columns)
 
-#cur.execute("SELECT * FROM Order_Item")
-cur.execute(
-"""SELECT 
-    oi.OrderItemID,
-    oi.OrderID,
-    oi.ItemID,
-    m.ItemName,
-    oi.Quantity,
-    m.Price,
-    oi.Subtotal
-
-
-FROM 
-    Order_Item oi
-JOIN 
-    Menu m ON oi.ItemID = m.ItemID;""")
+cur.execute(JoinItemMenu())
 
 # Fetch all the rows from the SQL result
 rows = cur.fetchall()
@@ -110,25 +95,7 @@ columns = [desc[0] for desc in cur.description]
 df6 = pd.DataFrame(rows, columns=columns)
 
 #cur.execute("SELECT * FROM Order_Line")
-cur.execute(
-"""SELECT
-    ol.OrderID,
-    ol.EmployeeID,
-    e.FirstName AS EmployeeFirstName,
-    e.LastName AS EmployeeLastName,
-    e.JobTitle AS EmployeeJobTitle,
-    ol.CustomerID,
-    c.FirstName AS CustomerFirstName,
-    c.LastName AS CustomerLastName,
-    ol.OrderDate,
-    ol.AmountPaid,
-    ol.PaymentMethod
-FROM 
-    Order_Line ol
-JOIN 
-    Customer c ON ol.CustomerID = c.CustomerID
-JOIN 
-    Employee e ON ol.EmployeeID = e.EmployeeID;""")
+cur.execute(JoinOrderCustomer())
 
 
 # Fetch all the rows from the SQL result
@@ -140,7 +107,7 @@ columns = [desc[0] for desc in cur.description]
 # Create a DataFrame
 df7 = pd.DataFrame(rows, columns=columns)
 
-cur.execute('SELECT OrderDate, SUM(AmountPaid) FROM Order_Line GROUP BY OrderDate')
+cur.execute(metricsLine())
 rows = cur.fetchall()
 
 # Process the data
@@ -162,11 +129,11 @@ with Dashboard:
     col1, col2, col3 = c.columns(3)
     total_orders = df7['OrderID'].nunique()
     total_customers = df7['CustomerID'].nunique()
-    total_amount_paid = round(df8['AmountPaid'].sum(),2)
+    total_amount_paid = df8['AmountPaid'].sum()
     
     col1.metric(label="Total Orders", value=total_orders, delta=total_orders-100,)
     col2.metric(label="Total Customers", value=total_customers, delta=total_customers-125)
-    col3.metric(label="Total Sales", value=total_amount_paid, delta=total_amount_paid -1000)
+    col3.metric(label="Total Sales", value= round(total_amount_paid,2), delta=round(total_amount_paid -1000,2))
 
     chartcol1, chartcol2 = st.columns(2)
     chart_data = df7
@@ -202,7 +169,7 @@ with Edit:
             if item_id == "nan" :
             
                 # Execute the SQL INSERT statement for each row
-                cur.execute("INSERT INTO Menu (ItemName, Description, price) VALUES (%s, %s, %s)", (ItemName, Description, price ))
+                cur.execute(addMenu(ItemName, Description, price ))
 
     db.commit()
     st.success("Data inserted successfully!")
