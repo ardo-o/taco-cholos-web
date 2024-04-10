@@ -57,4 +57,4 @@ The application provides three main tabs:
 ---
 
 
-This is for education purpose only.
+This is for educational purposes only.
