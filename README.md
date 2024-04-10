@@ -27,6 +27,7 @@ To run the application, ensure you have the following:
 2. Install the required Python packages using `pip install -r requirements.txt`.
 3. Ensure your MySQL server is running.
 4. Set up environment variables, particularly the `DBPass` variable, containing the database password.
+5. Execute the `SQL_inject.sql` file to add the appropriate table structure to your MySQL database.
 
 ## Running the Application
 
@@ -41,6 +42,7 @@ The application provides three main tabs:
 1. **Home Tab**: Displays an introductory section with images representing the restaurant.
 2. **Order Tab**: Allows users to place orders by selecting items from the menu and providing necessary contact details. It calculates the subtotal, tax, and total automatically.
 3. **Menu Tab**: Shows the menu items available at Cholos Tacos.
+4. **Dashboard Tab**:Displays key metrics related to restaurant operations, such as total orders, total customers, and total sales, using Streamlit metrics components.
 
 ## Usage Notes
 
