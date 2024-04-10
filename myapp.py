@@ -137,6 +137,26 @@ with OrderTab:
                 
                     cur.execute( addOrderItem(orderID, item_id, quantity,subtot ))
 
+                    query = itemIngredient(item_id)
+                    print(item_id)
+
+                    # Execute the query
+                    cur.execute(query)
+
+                    # Fetch all rows from the result set
+                    rows = cur.fetchall()
+
+                    # Loop through each row and update the desired column
+                    for row in rows:
+                        # Access the column you want to decrease by one
+                        # For example, if it's the second column, you can use row[1]
+                        updated_value = row[0]
+                        
+                        # Update the column with the new value
+                        cur.execute( reduceInventory(updated_value))
+                    
+                        
+
             db.commit()
             st.success("Data inserted successfully!")
         
