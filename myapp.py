@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
-from mySQL_Function import greet
+from Query import *
 from PIL import Image
 import mysql.connector
 import re
@@ -26,13 +26,10 @@ db = mysql.connector.connect(user='root',
                    host='127.0.0.1',
                    database='CholosTacos')
  
-# you must create a Cursor object. It will let
-#  you execute all the queries you need
+
 cur = db.cursor()
 
-# Use all the SQL you like
-cur.execute("SELECT * FROM MENU")
-
+cur.execute(getMenu())
 # Fetch all the rows from the SQL result
 rows = cur.fetchall()
 
@@ -44,14 +41,7 @@ df = pd.DataFrame(rows, columns=columns)
 df['Quantity'] = 0
 
 
-# Call the function
-result = greet("ff")
-print(result)
 
-
-#image1 = Image.open('Photos/pizza.png')
-#image2 = Image.open('Photos/food3.png')
-#image3 = Image.open('Photos/food4.png')
 def validate_phone_number(phone_number):
     # Regular expression to match a valid phone number format
     pattern = r'^[0-9]{10}$'  # Matches a 10-digit number
@@ -68,10 +58,6 @@ with HomeTab:
     col2.image("https://i.ibb.co/QJCQWXc/food3.png")
     col3.image("https://i.ibb.co/rG6WYRY/food4.png")
 
-    #col1.image(image1)
-    #col2.image(image2)
-    #col3.image(image3)
-
 
 with OrderTab:
     OTcol1, OTcol2 = st.columns(2)
@@ -80,23 +66,13 @@ with OrderTab:
     last_name = OTcol2.text_input("Last Name", key="last_name")
     email = OTcol1.text_input("Email Address", key="email")
     phone_number = OTcol2.number_input("Phone Number", step=1, format="%i", key="phone_number")
-
-    #%d %e %f %g %i %u
     c = st.container()
-
- #   df = pd.DataFrame(
- #   [
- #      {"Item": "Food 1","Price":10, "Quantity": 0 },
- #      {"Item": "Food 2", "Price":10,"Quantity": 0 },
- #      {"Item": "Food 3","Price":10, "Quantity": 0},
- #  ]
- #   )
 
     edited_df = c.data_editor(df,column_config={
         "ItemName": st.column_config.Column(width=300),
         "Price":st.column_config.NumberColumn(format="$%.2f") },use_container_width=True,hide_index=True,disabled=["ItemName","ItemID","Description","Price"])
     
-        # Sum column 'A' where column 'B' is True
+        
     
     edited_df['Price'] = edited_df['Price'].apply(Decimal)
     edited_df['Quantity'] = edited_df['Quantity'].apply(Decimal)
@@ -127,7 +103,7 @@ with OrderTab:
             values = (first_name, last_name, str(phone_number), email)
 
             # Execute a SELECT query to check if the record exists
-            cur.execute("SELECT CustomerID FROM Customer WHERE FirstName = %s AND LastName = %s AND PhoneNumber = %s AND EmailAddress = %s", values)
+            cur.execute(customerExist(first_name, last_name, str(phone_number), email))
 
             # Fetch the first row (if any)
             rowd = cur.fetchone()
@@ -135,10 +111,11 @@ with OrderTab:
             if rowd:
                 # If the record exists, retrieve the primary key
                 customer_id = rowd[0]
-                print("Customer already exists. CustomerID:", customer_id)
+                
             else:
                 # If the record does not exist, insert a new record
-                cur.execute("INSERT INTO Customer (FirstName, LastName, PhoneNumber, EmailAddress) VALUES (%s, %s, %s, %s)", values)
+                cur.execute(insertCustomer(first_name, last_name, str(phone_number), email))
+                
                 # Retrieve the primary key of the newly inserted record
                 customer_id = cur.lastrowid
 
@@ -146,7 +123,7 @@ with OrderTab:
                 pass
 
             today_date = date.today().isoformat()
-            cur.execute("INSERT INTO Order_Line (EmployeeID, CustomerID, OrderDate, AmountPaid, PaymentMethod) VALUES (%s, %s, %s, %s,%s)", (1, customer_id, today_date, columnsum+tax,"Debit"))
+            cur.execute(addOrderLine(1, customer_id, today_date, columnsum+tax,"Debit"))
             orderID = cur.lastrowid
 
             for index, row in edited_df.iterrows():
@@ -158,19 +135,14 @@ with OrderTab:
 
                 if quantity > 0:
                 
-                    # Execute the SQL INSERT statement for each row
-                    cur.execute("INSERT INTO Order_Item (OrderID, ItemID, Quantity, Subtotal) VALUES (%s, %s, %s, %s)", (orderID, item_id, quantity,subtot ))
+                    cur.execute( addOrderItem(orderID, item_id, quantity,subtot ))
 
             db.commit()
-            #sql_insert = f"INSERT INTO orders (Price) VALUES ({columnsum+tax})"
-            #cur.execute(sql_insert)
             st.success("Data inserted successfully!")
-            #db.commit()
         
 
 with MenuTab:
-    cur.execute("SELECT ItemName, Description FROM Menu")
-
+    cur.execute(getMenuItems())
     # Fetch all the rows from the SQL result
     rows = cur.fetchall()
 
