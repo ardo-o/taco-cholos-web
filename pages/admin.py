@@ -170,9 +170,10 @@ with Edit:
             
                 # Execute the SQL INSERT statement for each row
                 cur.execute(addMenu(ItemName, Description, price ))
+        st.success("Data inserted successfully!")
 
     db.commit()
-    st.success("Data inserted successfully!")
+    
     st.divider()
 
     st.header("Employee")

@@ -29,8 +29,6 @@ db = mysql.connector.connect(user='root',
 
 cur = db.cursor()
 
-# Use all the SQL you like
-#cur.execute("SELECT * FROM MENU")
 cur.execute(getMenu())
 # Fetch all the rows from the SQL result
 rows = cur.fetchall()
@@ -105,7 +103,6 @@ with OrderTab:
             values = (first_name, last_name, str(phone_number), email)
 
             # Execute a SELECT query to check if the record exists
-            #cur.execute("SELECT CustomerID FROM Customer WHERE FirstName = %s AND LastName = %s AND PhoneNumber = %s AND EmailAddress = %s", values)
             cur.execute(customerExist(first_name, last_name, str(phone_number), email))
 
             # Fetch the first row (if any)
@@ -117,7 +114,6 @@ with OrderTab:
                 
             else:
                 # If the record does not exist, insert a new record
-               # cur.execute("INSERT INTO Customer (FirstName, LastName, PhoneNumber, EmailAddress) VALUES (%s, %s, %s, %s)", values)
                 cur.execute(insertCustomer(first_name, last_name, str(phone_number), email))
                 
                 # Retrieve the primary key of the newly inserted record
@@ -127,7 +123,6 @@ with OrderTab:
                 pass
 
             today_date = date.today().isoformat()
-           # cur.execute("INSERT INTO Order_Line (EmployeeID, CustomerID, OrderDate, AmountPaid, PaymentMethod) VALUES (%s, %s, %s, %s,%s)", (1, customer_id, today_date, columnsum+tax,"Debit"))
             cur.execute(addOrderLine(1, customer_id, today_date, columnsum+tax,"Debit"))
             orderID = cur.lastrowid
 
@@ -140,8 +135,6 @@ with OrderTab:
 
                 if quantity > 0:
                 
-                    # Execute the SQL INSERT statement for each row
-                    #cur.execute("INSERT INTO Order_Item (OrderID, ItemID, Quantity, Subtotal) VALUES (%s, %s, %s, %s)", (orderID, item_id, quantity,subtot ))
                     cur.execute( addOrderItem(orderID, item_id, quantity,subtot ))
 
             db.commit()
@@ -149,7 +142,6 @@ with OrderTab:
         
 
 with MenuTab:
-    #cur.execute("SELECT ItemName, Description FROM Menu")
     cur.execute(getMenuItems())
     # Fetch all the rows from the SQL result
     rows = cur.fetchall()
