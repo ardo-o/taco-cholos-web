@@ -73,7 +73,7 @@ def addMenu(ItemName, Description, price):
    return f"INSERT INTO Menu (ItemName, Description, price) VALUES ('{ItemName}', '{Description}', '{price}')"
 
 def reduceInventory(updated_value):
-   return f"UPDATE Ingredients SET QuanitityInStock = QuanitityInStock -1   WHERE IngredientID = '{updated_value}'"
+   return f"UPDATE Ingredients SET QuantityInStock = QuantityInStock -1   WHERE IngredientID = '{updated_value}'"
 
 def itemIngredient(item_id):
    return f"SELECT * FROM Ingredients where itemid = {item_id};"
